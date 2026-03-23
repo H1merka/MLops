@@ -17,7 +17,7 @@
 
 ## Проекты
 
-### 1. 🚗 cars/
+### 1. cars/
 **Flask API + Apache Airflow Data Pipeline**
 
 REST API для работы с датасетом автомобилей с интеграцией в Airflow.
@@ -55,7 +55,7 @@ curl -u airflow:airflow "http://localhost:8081/cars?min_year=2015&max_price=2000
 
 ---
 
-### 2. 🏗️ cars compose/
+### 2. cars compose/
 **Микросервисная архитектура с Redis кэшированием**
 
 Production-ready вариант cars API с кэшированием и docker-compose оркестрацией.
@@ -91,7 +91,7 @@ docker compose logs -f
 
 ---
 
-### 3. 🔄 lab airflow/
+### 3. lab airflow/
 **Автоматизированный ML Pipeline с Apache Airflow**
 
 Полный пайплайн машинного обучения: загрузка → очистка → обучение модели.
@@ -122,7 +122,7 @@ download_cars → clear_cars → train_cars
 
 ---
 
-### 4. 🔬 lab3/
+### 4. lab3/
 **ML Эксперимент с MLflow Tracking**
 
 Standalone эксперимент для подбора гиперпараметров и трекинга с MLflow.
@@ -164,7 +164,7 @@ mlflow ui  # Просмотр экспериментов
 
 ---
 
-### 5. ⚡ lab_fastapi/
+### 5. lab_fastapi/
 **Production ML Inference сервис (FastAPI)**
 
 REST API для real-time предсказания цен автомобилей на основе обученной модели.

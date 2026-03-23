@@ -1,0 +1,2 @@
+-r cars-api/requirements_api.txt
+-r requirements_airflow.txt

@@ -1,5 +1,4 @@
 import os
-import time
 
 import pandas as pd
 from flask import Flask, jsonify, request
@@ -8,13 +7,16 @@ from werkzeug.security import check_password_hash, generate_password_hash
 
 DEFAULT_ITEMS_PER_PAGE = 100
 
+
 def _read_cars(file_path):
     try:
         cars = pd.read_csv(file_path)
         if cars.empty:
             raise ValueError("The cars DataFrame is empty.")
-        # Optional: convert column names to snake_case for consistency (not required, but cleaner)
-        cars.columns = [col.strip().replace(" ", "_").replace("(", "").replace(")", "") for col in cars.columns]
+        cars.columns = [
+            col.strip().replace(" ", "_").replace("(", "").replace(")", "")
+            for col in cars.columns
+        ]
         return cars
     except FileNotFoundError:
         raise FileNotFoundError(f"The file {file_path} does not exist.")
@@ -26,13 +28,13 @@ app = Flask(__name__)
 app.config["cars"] = _read_cars("/cars.csv")
 
 auth = HTTPBasicAuth()
-# users = {
-#         os.environ.get("API_USER", "airflow"): generate_password_hash(
-#         os.environ.get("API_PASSWORD", "airflow"), method="sha256"
-#     )
-# }
 
-users = { "airflow": generate_password_hash("airflow", method="pbkdf2")}
+users = {
+    os.environ.get("API_USER", "airflow"): generate_password_hash(
+        os.environ.get("API_PASSWORD", "airflow"), method="pbkdf2"
+    )
+}
+
 
 @auth.verify_password
 def verify_password(username, password):
@@ -62,10 +64,10 @@ def cars():
         Minimum price (inclusive).
     max_price : float
         Maximum price (inclusive).
-    fuel_type : int
-        type code (e.g., 0=petrol, 1=diesel, 2=electric, etc.).
-    transmission : int
-        Transmission type: 0=auto, 1=manual.
+    fuel_type : str
+        Fuel type value (case-insensitive), e.g. petrol/diesel/hybrid.
+    transmission : str
+        Transmission value (case-insensitive), e.g. automatic/manual.
     make : str
         Partial or full match for Make (case-insensitive).
     model : str
@@ -95,26 +97,32 @@ def cars():
         cars_df = cars_df[cars_df["Price_euro"] <= max_p]
 
     if "fuel_type" in request.args:
-        ft = int(request.args["fuel_type"])
-        cars_df = cars_df[cars_df["Fuel_type"] == ft]
+        ft = request.args["fuel_type"].lower()
+        cars_df = cars_df[cars_df["Fuel_type"].astype(str).str.lower() == ft]
 
     if "transmission" in request.args:
-        tr = int(request.args["transmission"])
-        cars_df = cars_df[cars_df["Transmission"] == tr]
+        tr = request.args["transmission"].lower()
+        cars_df = cars_df[
+            cars_df["Transmission"].astype(str).str.lower() == tr
+        ]
 
     if "make" in request.args:
         make_query = request.args["make"].lower()
-        cars_df = cars_df[cars_df["Make"].astype(str).str.lower().str.contains(make_query)]
+        cars_df = cars_df[
+            cars_df["Make"].astype(str).str.lower().str.contains(make_query)
+        ]
 
     if "model" in request.args:
         model_query = request.args["model"].lower()
-        cars_df = cars_df[cars_df["Model"].astype(str).str.lower().str.contains(model_query)]
+        cars_df = cars_df[
+            cars_df["Model"].astype(str).str.lower().str.contains(model_query)
+        ]
 
     # Pagination
     offset = int(request.args.get("offset", 0))
     limit = int(request.args.get("limit", DEFAULT_ITEMS_PER_PAGE))
 
-    subset = cars_df.iloc[offset : offset + limit]
+    subset = cars_df.iloc[offset: offset + limit]
 
     return jsonify(
         {
@@ -124,6 +132,7 @@ def cars():
             "total": len(cars_df),
         }
     )
+
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=8081)

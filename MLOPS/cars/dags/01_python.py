@@ -7,14 +7,15 @@ import requests
 from airflow import DAG
 from airflow.operators.python import PythonOperator
 from datetime import datetime
+from sklearn.preprocessing import OrdinalEncoder
 
 # Параметры подключения к вашему API
-MOVIELENS_HOST = os.environ.get("MOVIELENS_HOST", "carsapi")
-MOVIELENS_SCHEMA = os.environ.get("MOVIELENS_SCHEMA", "http")
-MOVIELENS_PORT = os.environ.get("MOVIELENS_PORT", "8081")
+CARS_HOST = os.environ.get("CARS_HOST", "carsapi")
+CARS_SCHEMA = os.environ.get("CARS_SCHEMA", "http")
+CARS_PORT = os.environ.get("CARS_PORT", "8081")
 
-MOVIELENS_USER = os.environ["MOVIELENS_USER"]
-MOVIELENS_PASSWORD = os.environ["MOVIELENS_PASSWORD"]
+CARS_USER = os.environ["CARS_USER"]
+CARS_PASSWORD = os.environ["CARS_PASSWORD"]
 
 # Настройка логгера
 logger = logging.getLogger(__name__)
@@ -23,8 +24,8 @@ logger = logging.getLogger(__name__)
 def _get_session():
     """Создаёт сессию для запросов к вашему Car API."""
     session = requests.Session()
-    session.auth = (MOVIELENS_USER, MOVIELENS_PASSWORD)
-    base_url = f"{MOVIELENS_SCHEMA}://{MOVIELENS_HOST}:{MOVIELENS_PORT}"
+    session.auth = (CARS_USER, CARS_PASSWORD)
+    base_url = f"{CARS_SCHEMA}://{CARS_HOST}:{CARS_PORT}"
     return session, base_url
 
 
@@ -70,9 +71,43 @@ def fetch_cars(**context):
     logger.info(f"Saved cars to {output_path}")
 
 
+def clean_cars_data(**context):
+    """
+    Загружает сырые данные, удаляет дубликаты/пропуски,
+    кодирует категориальные поля и сохраняет очищенный JSON.
+    """
+    input_path = "/data/cars/cars_full.json"
+    output_path = "/data/cleaned/cars_cleaned.json"
+
+    logger.info(f"Reading raw cars from {input_path}")
+    df = pd.read_json(input_path)
+
+    if df.empty:
+        logger.warning("Raw dataset is empty. Nothing to clean.")
+        return
+
+    # Удаляем дубликаты и строки с пропусками.
+    df = df.drop_duplicates().dropna().reset_index(drop=True)
+
+    categorical_cols = [
+        col
+        for col in ["Make", "Model", "Style", "Fuel_type", "Transmission"]
+        if col in df.columns
+    ]
+
+    if categorical_cols:
+        encoder = OrdinalEncoder()
+        encoded = encoder.fit_transform(df[categorical_cols])
+        df[categorical_cols] = encoded
+
+    os.makedirs(os.path.dirname(output_path), exist_ok=True)
+    df.to_json(output_path, orient="records")
+    logger.info(f"Saved cleaned data to {output_path}")
+
+
 def analyze_cars(**context):
     """Анализирует данные: например, средняя цена по году."""
-    input_path = "/data/cars/cars_full.json"
+    input_path = "/data/cleaned/cars_cleaned.json"
     output_path = "/data/cars/price_by_year.csv"
 
     logger.info(f"Reading cars from {input_path}")
@@ -83,7 +118,7 @@ def analyze_cars(**context):
         return
 
     # Пример анализа: средняя цена по году
-    summary = df.groupby("Year")["Priceeuro"].agg(
+    summary = df.groupby("Year")["Price_euro"].agg(
         mean_price="mean",
         count="count",
         min_price="min",
@@ -110,9 +145,14 @@ with DAG(
         python_callable=fetch_cars,
     )
 
+    clean_task = PythonOperator(
+        task_id="clean_cars_data",
+        python_callable=clean_cars_data,
+    )
+
     analyze_task = PythonOperator(
         task_id="analyze_cars",
         python_callable=analyze_cars,
     )
 
-    fetch_task >> analyze_task
+    fetch_task >> clean_task >> analyze_task

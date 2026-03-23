@@ -4,20 +4,18 @@ x-airflow-common:
     AIRFLOW__CORE__LOAD_EXAMPLES: 'false'
     AIRFLOW__CORE__TEST_CONNECTION: 'Enabled'
     AIRFLOW__DAG_PROCESSOR__REFRESH_INTERVAL: 60
-    AIRFLOW__API_AUTH__JWT_SECRET: foo
-    AIRFLOW__API__SECRET_KEY: bar
+    AIRFLOW__API_AUTH__JWT_SECRET: ${AIRFLOW__API_AUTH__JWT_SECRET}
+    AIRFLOW__API__SECRET_KEY: ${AIRFLOW__API__SECRET_KEY}
     # Dag specific connection setup
-    AIRFLOW_CONN_MOVIELENS: http://airflow:airflow@movielens
-    MOVIELENS_USER: airflow
-    MOVIELENS_PASSWORD: airflow
+    AIRFLOW_CONN_CARSAPI: ${AIRFLOW_CONN_CARSAPI}
+    CARS_HOST: ${CARS_HOST}
+    CARS_SCHEMA: ${CARS_SCHEMA}
+    CARS_PORT: ${CARS_PORT}
+    CARS_USER: ${CARS_USER}
+    CARS_PASSWORD: ${CARS_PASSWORD}
   volumes:
-    - ./src:/opt/airflow/custom/src
-    - ./setup.py:/opt/airflow/custom/setup.py
-    - build:/opt/airflow/custom/build
     - airflow-data-volume:/data
-    # - ./data:/opt/airflow/data
     - ./data:/data 
-    # - /media/kirilman/Z3/URFU/MLOPS/Лабы/data-pipelines-with-airflow-2nd-ed/chapter09/data:/data
 
 services:
   airflow-apiserver:
@@ -42,7 +40,7 @@ services:
     <<: *airflow-common
 
   airflow-data:
-    image: ${AIRFLOW_IMAGE_NAME:-apache/airflow:2.10.2}
+    image: ${AIRFLOW_IMAGE_NAME:-apache/airflow:3.1.2}
     <<: *airflow-common
     entrypoint: /bin/bash
     # yamllint disable rule:line-length
@@ -68,11 +66,10 @@ services:
     ports:
       - "8081:8081"
     environment:
-      API_USER: airflow
-      API_PASSWORD: airflow
+      API_USER: ${API_USER}
+      API_PASSWORD: ${API_PASSWORD}
     volumes:
-      - ./cars.csv:/app/cars.csv:ro  # 
+      - ./cars-api/cars.csv:/cars.csv:ro
 
 volumes:
   airflow-data-volume:
-  build:
