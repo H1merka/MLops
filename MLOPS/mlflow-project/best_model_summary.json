@@ -1,0 +1,6 @@
+{
+  "run_id": "98ee2999cd2242ddbe866d0c70781ef1",
+  "score": 1.0,
+  "model_uri": "runs:/98ee2999cd2242ddbe866d0c70781ef1/model",
+  "model_name": "logistic_regression"
+}

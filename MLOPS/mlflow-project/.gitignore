@@ -221,3 +221,6 @@ data/
 
 # Docs
 instruction.md
+
+# MLflow data
+mlruns/

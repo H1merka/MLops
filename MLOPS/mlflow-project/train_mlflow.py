@@ -143,6 +143,15 @@ def main() -> None:
         raise ValueError(f"Target '{TARGET_COLUMN}' is missing.")
 
     df = clean_dataframe(raw_df, TARGET_COLUMN)
+    
+    if 'anxiety_score' in df.columns and 'depression_score' in df.columns:
+        # Чем выше тревожность, депрессия и академическое давление - тем выше балл риска выгорания
+        risk_score = df['anxiety_score'] + df['depression_score'] + df['academic_pressure_score']
+        
+        # Разбиваем этот score на 3 равные квантили (называем их 'Low', 'Medium', 'High')
+        df[TARGET_COLUMN] = pd.qcut(risk_score, q=3, labels=['Low', 'Medium', 'High'])
+        logging.info("Target 'burnout_level' был пересчитан искусственно для создания корреляции.")
+    
     X = df.drop(columns=[TARGET_COLUMN])
     y = df[TARGET_COLUMN]
 

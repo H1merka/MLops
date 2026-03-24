@@ -1,0 +1,3 @@
+run_id,start_time,params.model_name,params.test_size,params.random_state,metrics.f1_macro,metrics.accuracy,metrics.precision_macro,metrics.recall_macro
+98ee2999cd2242ddbe866d0c70781ef1,2026-03-24 18:06:54.628000+00:00,logistic_regression,0.2,42,1.0,1.0,1.0,1.0
+c2b9a5f34ae342a88fc13b15b38becf4,2026-03-24 18:07:08.242000+00:00,random_forest,0.2,42,0.9710215269826096,0.9704333333333334,0.9725384922583209,0.9699383653835
