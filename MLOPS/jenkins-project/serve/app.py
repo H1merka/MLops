@@ -1,15 +1,16 @@
 from fastapi import FastAPI
 from pydantic import BaseModel
-from typing import List, Any
+from typing import List, Any, Dict
 import joblib
 import os
 import numpy as np
+import pandas as pd
 
 app = FastAPI()
 
 
 class PredictionRequest(BaseModel):
-    inputs: List[List[float]]
+    inputs: List[Dict[str, Any]]
 
 
 def load_model():
@@ -37,9 +38,10 @@ def health():
 def predict(req: PredictionRequest):
     if MODEL is None:
         return {"error": "model not loaded"}
-    X = np.array(req.inputs)
     try:
-        preds = MODEL.predict(X)
+        # Преобразуем в DataFrame, чтобы sklearn нашел нужные колонки
+        df = pd.DataFrame(req.inputs)
+        preds = MODEL.predict(df)
         return {"predictions": np.asarray(preds).tolist()}
     except Exception as e:
         return {"error": str(e)}

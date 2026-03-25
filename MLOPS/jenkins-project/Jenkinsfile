@@ -31,13 +31,13 @@ pipeline {
                     '''
                 }
                 // затем локальный препроцессинг
-                sh '. venv/bin/activate && python3 scripts/preprocess.py'
+                sh 'PYTHONPATH=. venv/bin/activate && python3 scripts/preprocess.py'
             }
         }
 
         stage('Train') {
             steps {
-                sh '. venv/bin/activate && python3 scripts/train.py'
+                sh 'PYTHONPATH=. venv/bin/activate && python3 scripts/train.py'
             }
             post {
                 success {
@@ -63,7 +63,16 @@ pipeline {
 
         stage('Smoke Test') {
             steps {
-                sh 'curl -sS --fail http://127.0.0.1/predict -H "Content-Type: application/json" --data "{\"inputs\":[[1,2,3]]}" || true'
+                sh '''
+                RESPONSE=$(curl -sS -X POST http://127.0.0.1/predict -H "Content-Type: application/json" \
+                -d '{"inputs":[{"price": 100.0, "discount_percent": 5.0, "quantity_sold": 2, "rating": 4.5, "review_count": 100, "product_category": 1, "customer_region": 1, "payment_method": 1, "order_year": 2023, "order_month": 5}]}')
+
+                echo "Response: $RESPONSE"
+                if [[ "$RESPONSE" == *"error"* ]]; then
+                    echo "Smoke test failed!"
+                    exit 1
+                fi
+                '''
             }
         }
     }
