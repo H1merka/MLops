@@ -1,3 +1,8 @@
+/.kaggle/
+data/*.zip
+data/*.gz
+# do not commit kaggle credentials
+.kaggle/kaggle.json
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[codz]
@@ -215,3 +220,9 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml*.joblib
+
+# Data
+data/
+
+# Docs
+instruction.md
