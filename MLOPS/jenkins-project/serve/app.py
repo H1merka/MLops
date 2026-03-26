@@ -6,6 +6,7 @@ import os
 import numpy as np
 import pandas as pd
 
+
 app = FastAPI()
 
 
@@ -14,8 +15,9 @@ class PredictionRequest(BaseModel):
 
 
 def load_model():
-    # Ищем сериализованную sklearn Pipeline (model_bundle.pkl или lr_pipeline.pkl или lr_cars.pkl)
-    candidates = ['model_bundle.pkl', 'lr_pipeline.pkl', 'lr_cars.pkl']
+    # Ищем сериализованную sklearn Pipeline. 
+    # Убрано нерелевантное имя lr_cars.pkl, добавлено lr_amazon.pkl
+    candidates =['model_bundle.pkl', 'lr_pipeline.pkl', 'lr_amazon.pkl']
     for p in candidates:
         if os.path.exists(p):
             try:
